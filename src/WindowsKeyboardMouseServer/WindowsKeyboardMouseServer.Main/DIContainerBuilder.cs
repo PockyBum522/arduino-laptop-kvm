@@ -5,16 +5,9 @@ using System.Windows;
 using System.Windows.Threading;
 using Autofac;
 using JetBrains.Annotations;
-using Newtonsoft.Json;
 using Serilog;
 using WindowsKeyboardMouseServer.Core;
 using WindowsKeyboardMouseServer.Core.Logic.Application;
-using WindowsKeyboardMouseServer.Core.Logic.MainProcessExecutors;
-using WindowsKeyboardMouseServer.Core.Logic.MainWindowLoaders;
-using WindowsKeyboardMouseServer.Core.Logic.MainWindowLoaders.SettingsSectionBuilders;
-using WindowsKeyboardMouseServer.Core.Logic.SettingsTaskHelpers;
-using WindowsKeyboardMouseServer.Core.Models;
-using WindowsKeyboardMouseServer.UI.WindowResources.InstallsEditor;
 using WindowsKeyboardMouseServer.UI.WindowResources.MainWindow;
 
 namespace WindowsKeyboardMouseServer.Main;
@@ -46,19 +39,11 @@ public class DiContainerBuilder
         
         // All of these methods set up and initialize all necessary resources and dependencies,
         // then register the thing for Dependency Injection
-
-        DeserializeStateFromDiskIntoPersistentState();
         
         RegisterApplicationConfiguration();
         
         RegisterMainDependencies();
 
-        RegisterTaskHelpers();
-
-        RegisterMainWindowLoaders();
-
-        RegisterSectionBuilders();
-        
         RegisterUiDependencies();
 
         var container = _builder.Build();

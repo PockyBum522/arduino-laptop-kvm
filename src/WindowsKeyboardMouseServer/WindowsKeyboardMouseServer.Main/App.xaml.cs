@@ -21,7 +21,7 @@ namespace WindowsKeyboardMouseServer.Main
         /// </summary>
         /// <param name="e">Startup event args</param>
         [SupportedOSPlatform("Windows7.0")]
-        protected override async void OnStartup(StartupEventArgs e)
+        protected override void OnStartup(StartupEventArgs e)
         {
             var dependencyContainer = _mainBuilder.GetBuiltContainer();
             
