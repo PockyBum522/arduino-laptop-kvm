@@ -6,36 +6,52 @@
 // Define Slave answer size
 #define ANSWERSIZE 5
 
+String inputString = ""; // A string to store incoming serial data
+
 void setup() 
 {
-  // Initialize I2C communications as Master
+  Serial.begin(115200);
   Wire.begin();
 
-  SerialUSB.begin(115200);
-}
+  pinMode(LED_BUILTIN, OUTPUT);
 
-byte i = 0;
+  Serial.println(F("Init done..."));
+}
 
 void loop() 
 {
-  delay(1000);
-  SerialUSB.println("\nWrite data to slave");
+  checkForIncomingSerialData();
 
+  checkForWireResponse();
+}
+
+void checkForIncomingSerialData()
+{
+  while (Serial.available()) 
+  {
+    char inChar = (char)Serial.read(); // Read a character from the serial buffer
+
+    inputString += inChar; // Add the character to the input string
+
+    if (inChar == ';') 
+    {
+      sendDataToKeyboardEmulatorBoard(inputString);
+      
+      inputString = ""; // Clear the input string for the next command
+    }
+  }
+}
+
+void sendDataToKeyboardEmulatorBoard(String dataToSend)
+{
   // Write a character to the Slave
   Wire.beginTransmission(SLAVE_ADDR);
-  Wire.write(i);
+  Wire.print(dataToSend);
   Wire.endTransmission();
+}
 
-  i += 1;
-
-  SerialUSB.print("One byte sent to slave = ");
-  SerialUSB.println(i, HEX);
-
-  // Read response from Slave
-  // Read back 5 characters
-  int number_of_bytes_returned = Wire.requestFrom(SLAVE_ADDR, ANSWERSIZE);
-
-  // Add characters to string
+void checkForWireResponse()
+{
   String response = "";
   
   while (Wire.available()) 
@@ -43,8 +59,4 @@ void loop()
     char b = Wire.read();
     response += b;
   }
-
-  // Print to Serial Monitor
-  SerialUSB.print(number_of_bytes_returned);
-  SerialUSB.println(" bytes returned from slave = " + response);
 }

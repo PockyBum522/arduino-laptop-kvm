@@ -8,7 +8,7 @@
         d:DataContext="{d:DesignInstance Type=mainWindow:MainWindowViewModel, IsDesignTimeCreatable=True}"
         mc:Ignorable="d"
         Style="{StaticResource StandardWindow}"
-        Title="MainWindow" Height="400" Width="400"
+        Title="MainWindow" Height="900" Width="900"
         Background="#222222">
     
     <Grid>
@@ -16,6 +16,7 @@
             <RowDefinition Height="10" />
             <RowDefinition Height="1*" />
             <RowDefinition Height="50" />
+            <RowDefinition Height="100" />
             <RowDefinition Height="1*" />
             <RowDefinition Height="10" />
         </Grid.RowDefinitions>
@@ -61,10 +62,46 @@
             
         </Grid.Resources>
 
+            <Grid Grid.Row="3" Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Up button -->
+                <!-- Unicode arrow: ↑ (U+2191) -->
+                <Button Grid.Row="0" Grid.Column="1" Content="↑" Command="{Binding MoveMouseUpCommand}" />
+
+                <!-- Left button -->
+                <!-- Unicode arrow: ← (U+2190) -->
+                <Button Grid.Row="1" Grid.Column="0" Content="←" Command="{Binding MoveMouseLeftCommand}" />
+
+                <!-- Right button -->
+                <!-- Unicode arrow: → (U+2192) -->
+                <Button Grid.Row="1" Grid.Column="2" Content="→" Command="{Binding MoveMouseRightCommand}" />
+
+                <!-- Down button -->
+                <!-- Unicode arrow: ↓ (U+2193) -->
+                <Button Grid.Row="2" Grid.Column="1" Content="↓" Command="{Binding MoveMouseDownCommand}" />
+            </Grid>
+        
             <!-- System Settings -->
-            <StackPanel Grid.Row="2" Grid.Column="2">
+            <StackPanel Grid.Row="4" Grid.Column="2">
 
                 <Button Content="Trap Mouse" Padding="10" />
+                
+                <Button Content="Send Hello" Command="{Binding SendHelloCommand}" Padding="10" />
+                <Button Content="Mouse move" Command="{Binding SendMouseMoveCommand}" Padding="10" />
+                <Button Content="Mouse mv s" Command="{Binding SendMouseMoveSmallCommand}" Padding="10" />
+                
+                <Button Content="Mouse L" Command="{Binding SendMouseLeftClickCommand}" Padding="10" />
+                <Button Content="Mouse R" Command="{Binding SendMouseRightClickCommand}" Padding="10" />
 
             </StackPanel>
     </Grid>
