@@ -38,6 +38,8 @@ void checkForIncomingSerialData()
       sendDataToKeyboardEmulatorBoard(inputString);
       
       inputString = ""; // Clear the input string for the next command
+
+      return;
     }
   }
 }
