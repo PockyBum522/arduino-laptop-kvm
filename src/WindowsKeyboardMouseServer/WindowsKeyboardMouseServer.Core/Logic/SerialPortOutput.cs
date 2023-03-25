@@ -1,5 +1,7 @@
-﻿using System.IO.Ports;
+﻿using System;
+using System.IO.Ports;
 using System.Text;
+using System.Windows;
 
 namespace WindowsKeyboardMouseServer.Core.Logic;
 
@@ -8,6 +10,12 @@ namespace WindowsKeyboardMouseServer.Core.Logic;
 /// </summary>
 public class SerialPortOutput
 {
+    private readonly string _portName;
+    /// <summary>
+    /// Whether or not the serial port is currently connected and in use
+    /// </summary>
+    public bool IsOpen { get; private set; }
+
     private SerialPort _serialPort;
 
     /// <summary>
@@ -17,11 +25,14 @@ public class SerialPortOutput
     /// <param name="baudRate">Baud rate, defaults to 115200</param>
     public SerialPortOutput(string portName, int baudRate = 115200)
     {
-        _serialPort ??= new SerialPort(portName, baudRate);
-        
+        _portName = portName;
+        _serialPort ??= new SerialPort(_portName, baudRate);
+
         _serialPort.Open();
         
         _serialPort.Encoding = Encoding.ASCII;
+
+        IsOpen = true;
     }
     
     /// <summary>
@@ -38,6 +49,18 @@ public class SerialPortOutput
     /// </summary>
     public void CloseSerialPort()
     {
-        _serialPort.Close();
+        try
+        {
+            _serialPort.Close();
+
+            IsOpen = false;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($@"""Could not close serial port, {_portName}
+
+                            Exception message:{ex.Message}""");
+        }
+        
     }
 }

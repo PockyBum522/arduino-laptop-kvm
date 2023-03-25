@@ -4,11 +4,14 @@ using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Threading;
 using Autofac;
+using Config.Net;
 using JetBrains.Annotations;
 using Serilog;
 using WindowsKeyboardMouseServer.Core;
 using WindowsKeyboardMouseServer.Core.Logic.Application;
-using WindowsKeyboardMouseServer.UI.WindowResources.MainWindow;
+using WindowsKeyboardMouseServer.Core.Models;
+using WindowsKeyboardMouseServer.UI.WindowResources.MainWindowResources;
+using WindowsKeyboardMouseServer.UI.WindowResources.SettingsWindowResources;
 
 namespace WindowsKeyboardMouseServer.Main;
 
@@ -22,7 +25,7 @@ public class DiContainerBuilder
     private readonly ContainerBuilder _builder = new ();
     private ILogger? _logger;
     
-    //private ISettingsApplicationLocal _settingsApplicationLocal;
+    private ISettingsApplicationLocal _settingsApplicationLocal;
 
     /// <summary>
     /// Gets a built container with all local application and TeakTools.Common dependencies in it
@@ -84,32 +87,26 @@ public class DiContainerBuilder
     }
     private void RegisterApplicationConfiguration()
     {
-        // _settingsApplicationLocal = 
-        //     new ConfigurationBuilder<ISettingsApplicationLocal>()
-        //         .UseIniFile(ApplicationPaths.PathSettingsApplicationLocalIniFile)
-        //         .Build();
-        //
-        // _builder.RegisterInstance(_settingsApplicationLocal).As<ISettingsApplicationLocal>().SingleInstance();
-        //
-        // SetupAnyBlankConfigurationPropertiesAsDefaults();
+        _settingsApplicationLocal = 
+            new ConfigurationBuilder<ISettingsApplicationLocal>()
+                .UseIniFile(ApplicationPaths.PathSettingsApplicationLocalIniFile)
+                .Build();
+        
+        _builder.RegisterInstance(_settingsApplicationLocal).As<ISettingsApplicationLocal>().SingleInstance();
+        
+        SetupAnyBlankConfigurationPropertiesAsDefaults();
     }
 
     private void SetupAnyBlankConfigurationPropertiesAsDefaults()
     {
-        // if (string.IsNullOrWhiteSpace(_settingsApplicationLocal.AdobeReaderExecutablePath))
-        //     _settingsApplicationLocal.AdobeReaderExecutablePath = @"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe";
-        //
-        // if (string.IsNullOrWhiteSpace(_settingsApplicationLocal.FoxitReaderExecutablePath))
-        //     _settingsApplicationLocal.FoxitReaderExecutablePath = @"C:\Program Files (x86)\FoxitReader Basic\FoxitPDFReader.exe";
+        if (string.IsNullOrWhiteSpace(_settingsApplicationLocal.LastSelectedComPort))
+            _settingsApplicationLocal.LastSelectedComPort = "COM257";
     }
 
     [SupportedOSPlatform("Windows7.0")]
     private void RegisterMainDependencies()
     {
         _builder.RegisterType<ExceptionHandler>().AsSelf().SingleInstance();
-        _builder.RegisterType<StartupScriptWriter>().AsSelf().SingleInstance();
-        _builder.RegisterType<SystemRebooter>().AsSelf().SingleInstance();
-        _builder.RegisterType<FinalCleanupHelper>().AsSelf().SingleInstance();
     }
     
     [SupportedOSPlatform("Windows7.0")]
@@ -119,5 +116,8 @@ public class DiContainerBuilder
         
         _builder.RegisterType<MainWindowViewModel>().AsSelf().SingleInstance();
         _builder.RegisterType<MainWindow>().AsSelf().SingleInstance();
+        
+        _builder.RegisterType<SettingsWindowViewModel>().AsSelf();
+        _builder.RegisterType<SettingsWindow>().AsSelf();
     }
 }

@@ -1,5 +1,3 @@
-using System;
-using System.Diagnostics;
 using System.Windows.Input;
 
 namespace WindowsKeyboardMouseServer.Core.Logic;
@@ -8,7 +6,7 @@ namespace WindowsKeyboardMouseServer.Core.Logic;
 /// Handles setting up data in the formats that the microcontroller expects to see and sending it over a provided
 /// SerialPortOutput
 /// </summary>
-public class SerialDataConverters
+public class SerialDataSender
 {
     private readonly SerialPortOutput _serialPortOutput;
 
@@ -16,7 +14,7 @@ public class SerialDataConverters
     /// Constructor for dependency injection
     /// </summary>
     /// <param name="serialPortOutput">Injected SerialPortOutput to use and send data on</param>
-    public SerialDataConverters(SerialPortOutput serialPortOutput)
+    public SerialDataSender(SerialPortOutput serialPortOutput)
     {
         _serialPortOutput = serialPortOutput;
     }
@@ -25,12 +23,12 @@ public class SerialDataConverters
     /// Sets up and sends mouse button clicks
     /// </summary>
     /// <param name="e">MouseButtonEventArgs from the event, so we know what button did something</param>
-    /// <param name="buttonState">If we should send that the button was pressed or released</param>
+    /// <param name="released">True if the button should be released, false if should be pressed</param>
     public void SendMouseEvent(MouseButtonEventArgs e, bool released)
     {
         //Debug.WriteLine("STATE: " + e.ButtonState);
 
-        string serialFormattedString = "";
+        var serialFormattedString = "";
         
         switch (e.ChangedButton)
         {
@@ -51,13 +49,15 @@ public class SerialDataConverters
         _serialPortOutput.SendDataOverSerialPort(serialFormattedString);
         
     }
-    
+
     /// <summary>
     /// Sets up and sends keys
     /// </summary>
-    public void SendKeyEvent(char key, bool released)
+    /// <param name="key">Key code to send</param>
+    /// <param name="released">True if the key should be released, false if should be pressed</param>
+    public void SendKeyEvent(int key, bool released)
     {
-        var serialString = $"k:{key},";
+        var serialString = $"k:{key.ToString()},";
         
         if (released)
             serialString += $"1;";

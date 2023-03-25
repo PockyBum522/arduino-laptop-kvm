@@ -1,12 +1,13 @@
-﻿<Window x:Class="WindowsKeyboardMouseServer.UI.WindowResources.MainWindow.MainWindow"
+﻿<Window x:Class="WindowsKeyboardMouseServer.UI.WindowResources.MainWindowResources.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=PresentationFramework"
-        xmlns:mainWindow="clr-namespace:WindowsKeyboardMouseServer.UI.WindowResources.MainWindow"
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
-        d:DataContext="{d:DesignInstance Type=mainWindow:MainWindowViewModel, IsDesignTimeCreatable=True}"
+        xmlns:windowResources="clr-namespace:WindowsKeyboardMouseServer.UI.WindowResources"
+        xmlns:mainWindowResources="clr-namespace:WindowsKeyboardMouseServer.UI.WindowResources.MainWindowResources"
+        d:DataContext="{d:DesignInstance Type=mainWindowResources:MainWindowViewModel, IsDesignTimeCreatable=True}"
         mc:Ignorable="d"
         Style="{StaticResource StandardWindow}"
         Title="MainWindow" Height="900" Width="900"
@@ -16,6 +17,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="10" />
             <RowDefinition Height="1*" />
+            <RowDefinition Height="50" />
+            <RowDefinition Height="50" />
             <RowDefinition Height="10" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -94,5 +97,7 @@
                 </Button>
 
             </DockPanel>
+            
+            <Button Grid.Row="3" Grid.Column="1" Width="100" Content="Settings" Command="{Binding OpenSettingsWindowCommand}" />
     </Grid>
 </Window>

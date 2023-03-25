@@ -1,14 +1,14 @@
-﻿namespace WindowsKeyboardMouseServer.UI.WindowResources.MainWindow;
+﻿namespace WindowsKeyboardMouseServer.UI.WindowResources.SettingsWindowResources;
 
 ///<summary>
 ///Interaction logic for MainWindow.xaml
 ///</summary>
-public partial class MainWindow
+public partial class SettingsWindow
 {
     /// <summary>
     /// Main window constructor
     /// </summary>
-    public MainWindow()
+    public SettingsWindow()
     {
         InitializeComponent();
     }

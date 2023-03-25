@@ -12,6 +12,7 @@
 
     <ItemGroup>
       <PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0" />
+      <PackageReference Include="Config.Net" Version="5.1.5" />
       <PackageReference Include="GuerrillaNtp" Version="3.0.0" />
       <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
@@ -28,6 +29,11 @@
 
     <ItemGroup>
       <Page Update="WindowResources\MainWindow\MainWindow.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <XamlRuntime>Wpf</XamlRuntime>
+        <SubType>Designer</SubType>
+      </Page>
+      <Page Update="WindowResources\SettingsWindow\SettingsWindow.xaml">
         <Generator>MSBuild:Compile</Generator>
         <XamlRuntime>Wpf</XamlRuntime>
         <SubType>Designer</SubType>
