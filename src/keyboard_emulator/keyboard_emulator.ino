@@ -2,6 +2,9 @@
 #include "Keyboard.h"
 #include "Mouse.h"
 
+// Define this if you want serial debug messages, comment it out outherwise
+#define DEBUG_MODE_ON
+
 // Define Slave I2C Address
 #define SLAVE_ADDR 9
 
@@ -20,13 +23,16 @@ void setup()
 
   // Setup Serial Monitor
   SerialUSB.begin(115200);
-  SerialUSB.println("I2C Slave Demonstration");
+  
+  #ifdef DEBUG_MODE_ON
+    SerialUSB.println("Init done...");
+  #endif
 }
 
 void receiveEvent(int howmany) 
 {
   String incomingData = "";
-  char incomingChar = '\n';
+  char incomingChar = '0'; // Just init to something, it'll get overwritten
 
   // Read while data received
   while (Wire.available() && incomingChar != ';') 
@@ -36,102 +42,100 @@ void receiveEvent(int howmany)
     incomingData += incomingChar;
   }
 
-  incomingData += '0';
+  //incomingData += '';
 
-  if (incomingData[1] == 'k' &&
-      incomingData[2] == ':')
+  #ifdef DEBUG_MODE_ON
+    SerialUSB.print("Incoming string over serial: '");
+    SerialUSB.print(incomingData);
+    SerialUSB.println("'");
+  #endif
+
+  if (incomingData[0] == 'k' &&
+      incomingData[1] == ':')
   {
-    sendKeyboardKey(incomingData[3]);
+    sendKeyboardKey(parseKeyboardKey(incomingData), parseKeyboardKeyReleased(incomingData));
   }
-  else if (incomingData[1] == 'm' &&
-      incomingData[2] == ':')
+  else if (incomingData[0] == 'm' &&
+      incomingData[1] == ':')
   {
     int mouseMoveX = parseMouseMoveX(incomingData);
     int mouseMoveY = parseMouseMoveY(incomingData);
 
     moveMouseRelative(mouseMoveX, mouseMoveY);
   }
-  else if (incomingData[1] == 'c' &&
-           incomingData[2] == ':')
+  else if (incomingData[0] == 'c' &&
+           incomingData[1] == ':')
   {
-    int convertedMouseButton = parseMouseCommand(incomingData);
+    int convertedMouseButton = parseMouseButton(incomingData);
+    bool convertedMouseAction = parseMouseAction(incomingData);
 
-    sendMouseCommand(convertedMouseButton);
+    sendMouseCommand(convertedMouseButton, convertedMouseAction);
   }
   
-  // SerialUSB.println();
-  // SerialUSB.println();
-  // SerialUSB.print("0: ");
-  // SerialUSB.print(incomingData[1]);
-  // SerialUSB.print(", 1: ");
-  // SerialUSB.print(incomingData[2]);
-  // SerialUSB.println();
+  #ifdef DEBUG_MODE_ON
+    SerialUSB.println();
+    SerialUSB.println();
+    SerialUSB.print("0: ");
+    SerialUSB.print(incomingData[0]);
+    SerialUSB.print(", 1: ");
+    SerialUSB.print(incomingData[1]);
+    SerialUSB.println();  
+  #endif
 
 }
 
 void loop() 
 {
-  // Time delay in loop
   delay(50);
 }
 
-// class Mouse_
-// {
-//   public:
-//     Mouse_(void);
-//     void begin(void);
-//     void end(void);
-//     void click(uint8_t b = MOUSE_LEFT);
-//     void move(signed char x, signed char y, signed char wheel = 0); 
-//     void press(uint8_t b = MOUSE_LEFT);   // press LEFT by default
-//     void release(uint8_t b = MOUSE_LEFT); // release LEFT by default
-//     bool isPressed(uint8_t b = MOUSE_LEFT); // check LEFT by default
-// };
-
-// extern Mouse_ Mouse;
-
-void sendKeyboardKey(char keyToSend)
+void sendKeyboardKey(char keyToSend, bool released)
 {
-  // Emulate keyboard key here
-  //SerialUSB.print("Key found, sending: ");
-  //SerialUSB.println(incomingData[3]);
-
-  Keyboard.write(keyToSend);
+  #ifdef DEBUG_MODE_ON
+    SerialUSB.print("Key found, sending: ");
+    SerialUSB.println(keyToSend);
+  #endif
+  
+  // if (!released)
+  //   Keyboard.press(keyToSend);
+  // else
+  //   Keyboard.release(keyToSend);
 }
 
 void moveMouseRelative(int mouseMoveX, int mouseMoveY)
 {
   Mouse.move((signed char)mouseMoveX, (signed char)mouseMoveY);
 
-  // SerialUSB.print("MX: ");
-  // SerialUSB.print(mouseMoveX);
-  // SerialUSB.print(", MY: ");
-  // SerialUSB.print(mouseMoveY);
-  // SerialUSB.println();
-  // SerialUSB.println();
+  #ifdef DEBUG_MODE_ON
+    SerialUSB.print("MX: ");
+    SerialUSB.print(mouseMoveX);
+    SerialUSB.print(", MY: ");
+    SerialUSB.print(mouseMoveY);
+    SerialUSB.println();
+    SerialUSB.println();
+  #endif
 }
 
-void sendMouseCommand(int buttonToSend)
+void sendMouseCommand(int buttonToSend, bool released)
 {
-  switch (buttonToSend) 
-  {  
-    case 0:
-      Mouse.click();
-      break;
-
-    case 2:
-      Mouse.press(2);
-      delay(50);
-      Mouse.release(2);
-      delay(50);
-
-    default:
-      break;
+  if (released)
+  {
+    Mouse.release(buttonToSend);
+  }
+  else
+  {
+    Mouse.press(buttonToSend);
   }
 }
 
 int parseMouseMoveX(String stringToParse)
 {
+  #ifdef DEBUG_MODE_ON
+    SerialUSB.print("X Parse Raw: ");
+    SerialUSB.print(stringToParse);
+    SerialUSB.println();
+  #endif
+
   int mIndex = stringToParse.indexOf("m:"); // Find the index of the "m:" substring
   
   int endIndex = stringToParse.indexOf(",", mIndex); // Find the index of the comma following the "m:" substring
@@ -174,7 +178,7 @@ int parseMouseMoveY(String stringToParse)
   return mValue;  
 }
 
-int parseMouseCommand(String stringToParse)
+int parseMouseButton(String stringToParse)
 {
   int mIndex = stringToParse.indexOf("c:"); // Find the index of the "m:" substring
 
@@ -183,4 +187,65 @@ int parseMouseCommand(String stringToParse)
   int mValue = mValueStr.toInt(); // Convert the substring to an integer
   
   return mValue;  
+}
+
+int parseKeyboardKey(String stringToParse)
+{
+  int mIndex = stringToParse.indexOf("k:"); // Find the index of the "m:" substring
+  int cIndex = stringToParse.indexOf(","); 
+
+  String mValueStr = stringToParse.substring(mIndex + 2, cIndex); // Extract the substring containing the value
+  
+  int mValue = mValueStr.toInt(); // Convert the substring to an integer
+  
+  #ifdef DEBUG_MODE_ON
+    SerialUSB.print("Key code Raw: ");
+    SerialUSB.print(mValueStr);
+    SerialUSB.println();
+  #endif
+
+  return mValue;  
+}
+
+bool parseKeyboardKeyReleased(String stringToParse)
+{
+  int mIndex = stringToParse.indexOf(","); // Find the index of the "m:" substring
+
+  String mValueStr = stringToParse.substring(mIndex + 1, mIndex + 2); // Extract the substring containing the value
+  
+  int mValue = mValueStr.toInt(); // Convert the substring to an integer
+  
+  #ifdef DEBUG_MODE_ON
+    SerialUSB.print("Key released: ");
+    SerialUSB.print(mValue);
+    SerialUSB.println();
+    SerialUSB.print("RAW Key released: ");
+    SerialUSB.print(mValueStr);
+    SerialUSB.println();
+  #endif
+
+  if (mValue == 1)
+    return true;
+    
+  return false;
+}
+
+int parseMouseAction(String stringToParse)
+{
+  int mIndex = stringToParse.indexOf(","); // Find the index of the "m:" substring
+
+  String mValueStr = stringToParse.substring(mIndex + 1, stringToParse.length()); // Extract the substring containing the value
+  
+  int mValue = mValueStr.toInt(); // Convert the substring to an integer
+  
+  #ifdef DEBUG_MODE_ON
+    SerialUSB.print("mValue action: ");
+    SerialUSB.print(mValue);
+    SerialUSB.println();
+  #endif
+
+  if (mValue == 0)
+    return false;
+
+  return true;  
 }
