@@ -5,13 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=PresentationFramework"
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
-        xmlns:windowResources="clr-namespace:WindowsKeyboardMouseServer.UI.WindowResources"
         xmlns:mainWindowResources="clr-namespace:WindowsKeyboardMouseServer.UI.WindowResources.MainWindowResources"
         d:DataContext="{d:DesignInstance Type=mainWindowResources:MainWindowViewModel, IsDesignTimeCreatable=True}"
         mc:Ignorable="d"
         Style="{StaticResource StandardWindow}"
-        Title="MainWindow" Height="900" Width="900"
-        Background="#222222">
+        Title="MainWindow" Height="900" Width="900" Top="10" Left="400"
+        Background="#222222" >
     
     <Grid>
         <Grid.RowDefinitions>
@@ -71,14 +70,6 @@
                         
                         <b:EventTrigger EventName="Loaded">
                             <b:InvokeCommandAction Command="{ Binding ButtonLoadedCommand }" PassEventArgsToCommand="True" />
-                        </b:EventTrigger>
-                        
-                        <b:EventTrigger EventName="PreviewKeyDown">
-                            <b:InvokeCommandAction Command="{ Binding KeyDownCommand }" PassEventArgsToCommand="True" />
-                        </b:EventTrigger>
-                        
-                        <b:EventTrigger EventName="PreviewKeyUp">
-                            <b:InvokeCommandAction Command="{ Binding KeyUpCommand }" PassEventArgsToCommand="True" />
                         </b:EventTrigger>
                         
                         <b:EventTrigger EventName="PreviewMouseDown">

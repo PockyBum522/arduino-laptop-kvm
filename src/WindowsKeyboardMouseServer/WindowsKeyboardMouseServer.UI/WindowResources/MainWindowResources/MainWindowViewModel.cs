@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -10,7 +11,6 @@ using Serilog;
 using WindowsKeyboardMouseServer.Core.Logic;
 using WindowsKeyboardMouseServer.Core.Models;
 using WindowsKeyboardMouseServer.UI.WindowResources.SettingsWindowResources;
-using KeyConverter = WindowsKeyboardMouseServer.Core.Logic.KeyConverter;
 
 namespace WindowsKeyboardMouseServer.UI.WindowResources.MainWindowResources;
 
@@ -23,10 +23,9 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly ISettingsApplicationLocal _settingsApplicationLocal;
     private readonly SettingsWindow _settingsWindow;
     private readonly SettingsWindowViewModel _settingsWindowViewModel;
-    private SerialDataSender _serialDataSender;
-    private readonly KeyConverter _keyConverter;
-    
-    private bool _isTrapEnabled;
+    private SerialDataSender? _serialDataSender;
+
+    private bool IsTrapEnabled { get; set; }
     private bool _artificialMovement;
     
     private Vector _movement;
@@ -34,12 +33,15 @@ public partial class MainWindowViewModel : ObservableObject
 
     private Button? _mouseTrapButton;
     private SerialPortOutput? _serialPortOutput;
-
+    private readonly KeyboardListener _keyboardListener;
+    
     /// <summary>
     /// Constructor for dependency injection
     /// </summary>
     /// <param name="logger">Injected ILogger to use</param>
     /// <param name="settingsApplicationLocal">Application settings handled by config.net</param>
+    /// <param name="settingsWindow">Settings window</param>
+    /// <param name="settingsWindowViewModel">Settings window view model</param>
     public MainWindowViewModel(
         ILogger logger,
         ISettingsApplicationLocal settingsApplicationLocal, 
@@ -50,15 +52,18 @@ public partial class MainWindowViewModel : ObservableObject
         _settingsApplicationLocal = settingsApplicationLocal;
         _settingsWindow = settingsWindow;
         _settingsWindowViewModel = settingsWindowViewModel;
-
+        
         _settingsWindow.DataContext = _settingsWindowViewModel;
         
         if (!LastSelectedPortIsValid())
         {
             PromptUserForNewPort();
         }
-
-        _keyConverter = new();
+        
+        _keyboardListener = new KeyboardListener();
+        
+        _keyboardListener.KeyDown += KeyboardHookKeyDown;
+        _keyboardListener.KeyUp += KeyboardHookKeyUp;
     }
 
     private void PromptUserForNewPort()
@@ -128,9 +133,14 @@ public partial class MainWindowViewModel : ObservableObject
     /// <summary>
     /// Starts trapping mouse/keyboard events
     /// </summary>
-    private void ActivateTrap(bool isEnabled)
+    private void SetTrapState(bool isEnabled)
     {
-        _isTrapEnabled = isEnabled;
+        IsTrapEnabled = isEnabled;
+        
+        if (isEnabled)
+            _keyboardListener.StartHandlingKeypresses();
+        else
+            _keyboardListener.StopHandlingKeypresses();
         
         Mouse.OverrideCursor = Cursors.None;
     }
@@ -148,71 +158,64 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void MouseUp(MouseButtonEventArgs e)
     {
-        if (!_isTrapEnabled) return;
+        if (!IsTrapEnabled) return;
         
-        _serialDataSender.SendMouseEvent(e, true);
+        _serialDataSender?.SendMouseEvent(e, true);
         e.Handled = true;
     }
 
     [RelayCommand]
     private void MouseDown(MouseButtonEventArgs e)
     {
-        if (_isTrapEnabled)
+        if (IsTrapEnabled)
         {
-            _serialDataSender.SendMouseEvent(e, false);
+            _serialDataSender?.SendMouseEvent(e, false);
             e.Handled = true;
             return;
         }
         
         MoveMouseToCenter(_mouseTrapButton);
 
-        ActivateTrap(true);
+        SetTrapState(true);
     }
     
     [RelayCommand]
     private void MouseMove(MouseEventArgs e)
     {
-        if (!_isTrapEnabled || _artificialMovement) return;
+        if (!IsTrapEnabled || _artificialMovement) return;
         
         MeasurePositionDelta(e);
 
         MoveMouseToCenter(_mouseTrapButton);
     }
     
-    [RelayCommand]
-    private void KeyDown(KeyEventArgs keyEventArgs)
+    private void KeyboardHookKeyDown(object sender, RawKeyEventArgs keyArgs)
     {
-        if (!_isTrapEnabled) return;
+        _serialDataSender?
+            .DebugWriteKeyEvent(keyArgs.Key, true);
         
-        keyEventArgs.Handled = true;
-    
-        var keyCode = _keyConverter.GetAsciiCodeFromKey(keyEventArgs.Key);
+        if (!IsTrapEnabled) return;
         
-        Debug.WriteLine($"Key down: {keyCode.ToString()}");
-        
-        _serialDataSender.SendKeyEvent(keyCode, false);
-    }
-    
-    [RelayCommand]
-    private void KeyUp(KeyEventArgs keyEventArgs)
-    {
-        if (!_isTrapEnabled) return;
-        
-        keyEventArgs.Handled = true;
-        
-        var keyCode = _keyConverter.GetAsciiCodeFromKey(keyEventArgs.Key);
-        
-        Debug.WriteLine($"Key up: {keyCode.ToString()}");
-        
-        _serialDataSender.SendKeyEvent(keyCode, true);
-        
-        // Escape should stop the mousetrap
-        if (keyEventArgs.Key == Key.Escape)
+        if (keyArgs.Key == Key.Escape)
         {
-            _isTrapEnabled = false;
+            IsTrapEnabled = false;
+            Environment.Exit(0);
+            return;
         }
+        
+        _serialDataSender?.SendKeyEvent(keyArgs.Key, false);
     }
-
+    
+    private void KeyboardHookKeyUp(object sender, RawKeyEventArgs keyArgs)
+    {
+        _serialDataSender?
+            .DebugWriteKeyEvent(keyArgs.Key, true); 
+        
+        if (!IsTrapEnabled) return;
+        
+        _serialDataSender?.SendKeyEvent(keyArgs.Key, true);
+    }
+    
     [RelayCommand]
     private void OpenSettingsWindow()
     {
@@ -262,7 +265,8 @@ public partial class MainWindowViewModel : ObservableObject
         }
 
         //Debug.WriteLine($"sending: {integerMovementX}, {integerMovementY}");
-        _serialDataSender.SendMouseMove(integerMovementX, integerMovementY);
+        
+        _serialDataSender?.SendMouseMove(integerMovementX, integerMovementY);
     }
 
     private void MoveMouseToCenter(object? sender)
@@ -287,6 +291,6 @@ public partial class MainWindowViewModel : ObservableObject
         _artificialMovement = false;
     }
 
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    [DllImport("user32.dll")]
     private static extern bool SetCursorPos(int x, int y);
 }

@@ -16,7 +16,7 @@ public class SerialPortOutput
     /// </summary>
     public bool IsOpen { get; private set; }
 
-    private SerialPort _serialPort;
+    private readonly SerialPort _serialPort;
 
     /// <summary>
     /// Sets up the serial port and opens the connection when SerialPortOutput is created

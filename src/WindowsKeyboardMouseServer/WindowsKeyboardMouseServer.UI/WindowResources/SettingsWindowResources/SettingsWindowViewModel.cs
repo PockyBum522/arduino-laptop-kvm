@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.IO.Ports;
 using System.Linq;
@@ -6,7 +5,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Windows;
-using System.Xml;
 using WindowsKeyboardMouseServer.Core.Models;
 
 namespace WindowsKeyboardMouseServer.UI.WindowResources.SettingsWindowResources;
